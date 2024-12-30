@@ -1,0 +1,146 @@
+/* css styles */
+
+
+/* justificar el texto */ 
+p, ul, ol {
+  text-align: justify; }       
+
+  
+/* definiendo estilos del titulo del documento */ 
+.title {
+  font-size: 44px;
+  color: steelblue;
+  font-weight: bold;
+  text-align: center; }
+
+/* definiendo estilos del subtitulo del documento. Lo q pasa es que nuestro documento no tiene subtitulo */ 
+.subtitle {
+  font-size: 30px;
+  color: pink; }
+
+/* definiendo estilos del titulo del author  */ 
+.author {
+  font-size: 25px;
+  color: red; }
+
+/* definiendo estilos para la fecha */ 
+.date {
+  color: orange; }
+
+
+
+/* definiendo estilos de los títulos de primer nivel (h1) */ 
+h1 {
+  color: darkblue;
+  font-size: 35px;
+  margin-top: 45px;       /* dejar algo de espacio (45 pixeles) antes de un título de primer nivel*/ 
+  margin-bottom: 35px; }  /* dejar algo de espacio despúes de un título de primer nivel*/ 
+
+
+/* definiendo estilos de los títulos de h2 a h5 nivel */ 
+h2, h3, h4, h5 { 
+  color: purple;
+  letter-spacing: 0.04em;  /* espaciado enre las letras (0.04 de la altura de la tipografía) */
+  margin-left: 15px; }  /* dejar espacio a la izquierda*/ 
+
+
+
+/* definiendo estilos del body : de toda la página */ 
+body { 
+  background-color: aliceblue; }  /* color del fondo*/ 
+
+
+/* importo un tipo de letra */ 
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:300italic,300); 
+
+/* definiendo estilos de los párrafos */ 
+p {
+  text-align: justify;         /* justificar el texto del body */      
+  line-height: 1.4;            /* anchura entre las lineas 1.0 is the default in Firefox. 2.0 provides a large space */     
+  margin: 10px 0px 10px 0px;    /* margenes entre los párafos: top, izquierda, abajo, left */   
+  font-size: 13pt;                                     /* tamaño de letra */   
+  font-family: 'Open Sans', Helvetica, sans-serif; }   /* tipo de letra, previamente la he importado */  
+
+
+
+/* definiendo estilos de las cajas de código (chunks) */ 
+pre {
+  background-color: pink;  /* color de las cajas de código */ 
+	font-size: 10pt;
+ 	border-radius: 9px;     /* q los bordes de las cajas sean redondas */ 
+	font-family: Monaco, monospace;
+	border: 3px solid green; }
+
+/* hacer cambios en el texto en negrita */ 
+strong {
+  color: green; }
+
+
+/* cambiar el color de los hipervinculos/enlaces  */
+a {
+  color: brown;
+  font-weight: bold; }
+
+
+/* cambiar el aspecto del TOC: 
+https://stackoverflow.com/questions/42546001/how-to-change-colors-and-attributes-of-table-of-contents-in-r-markdown-html-docu */
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover{
+  color: darkgreen;
+  font-weight: bold;
+  background-color: gold; }
+   
+   
+/* para hacer cajas de texto de colorines*/
+
+.caja-darkkhaki { background-color:#bdb76b; border-radius: 4px; padding: 13px;}
+
+.caja-medium-aquamarine { background-color:#e6f0ff; border-radius: 4px; padding: 13px; 
+        background-image: url("lightbulb.png");
+        background-size: 48px; }
+
+.caja-crimson { background-color:#DC143C; border-radius: 4px; 
+           padding: 4em;
+           background-image: url("lightbulb.png");
+           background-repeat: no-repeat; }
+
+.caja-gris-gainboro { background-color:#DCDCDC; border-radius: 4px; padding: 13px; 
+                 border: solid 8px black; 
+                 background-image: url("mola-mazo.png");
+                 background-size: 52px;
+                 background-repeat: no-repeat;
+                 background-position: 20% ; }
+
+.caja-linea-verde {  color: #004346;
+  background-color: #fff;
+  border-top: 4pt solid #09bc8a;
+  border-right-style: none;
+  border-bottom-style: none;
+  border-left-style: none;
+  padding: 23px 10px 21px 10px;
+}
+
+
+/* Guía para los colores: https://htmlcolorcodes.com/es/nombres-de-los-colores/  */
+
+ 
+ /* para las quotes o citas */
+
+blockquote {
+    padding: 10px 20px;
+    margin: 0 0 20px;
+    font-size: 14px;
+    border-left: 5px solid #DC143C;
+}
+
+
+/* para hacer lineas de colores */
+.linea-black {
+  border-top: 1px solid black;
+}
+
+
+.linea-red {
+  border-top: 2px dashed red;
+}
+
+

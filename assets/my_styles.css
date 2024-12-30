@@ -1,0 +1,74 @@
+/* css styles */
+
+/* de: https://github.com/schochastics/quarto-schochastics/blob/main/styles.css */ 
+
+.quarto-grid-item img.thumbnail-image {
+    object-fit: contain;
+}
+
+.thumbnail-image:hover{
+  opacity:75%;
+}
+
+.center{
+   text-align: center;
+}
+
+div.column.col-v-center{
+   vertical-align: middle;
+}
+
+.home-title{
+  font-size: 2em;
+}
+
+.socials{
+  padding-top: 0.5em;
+  padding-bottom: 1em;
+}
+
+.socials a{
+  color: #9EEBCF;
+  margin-left: 0.5em;
+}
+
+
+
+/* Para poner una imagen en el title-block-banner*/ 
+/* de: https://stackoverflow.com/questions/74180779/r-quarto-html-document-how-to-insert-logo-image-at-the-left-of-the-title-su */ 
+
+/*
+.quarto-title-block .quarto-title-banner {
+  background-image: url(imagenes/my_foto.png);
+  background-size: 250px;
+  background-position: left;
+  background-repeat: no-repeat;
+  padding-left: 10px;
+  background-origin: content-box;
+}
+*/
+
+
+/* NO TOCAR lo de arriba*/ 
+
+
+/* definiendo estilos de los párrafos */ 
+/* justificar el texto del body y listas */
+p, ul, ol {
+  text-align: justify; }              
+  
+
+
+
+.rojo {
+  color: red;
+}
+
+.yellow-background {
+  background-color: yellow;
+}
+
+.importante {
+  color: red;
+  background-color: yellow;
+}

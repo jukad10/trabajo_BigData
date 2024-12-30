@@ -1,0 +1,618 @@
+---
+title: |
+  ![](imagenes/logo.png){width=0.4in}
+  El último Barça campeón (temporada 22-23)
+
+description: |
+  La radiografía de un equipo (casi) imbatible y su camino al título
+abstract: El objeto del estudio es analizar la evolución del FC Barcelona en la 
+          temporada 2022-2023 y como acaba conquistando el título de la Liga Española.
+          Para ayudar a este análisis se parte de los resultados en esta competición
+          y las estadísticas de los jugadores del equipo. 
+
+author: 
+- name: Julio Saad (jusame@alumni.uv.es)  
+  affiliation: Universitat de València
+  affiliation-url: https://www.uv.es
+
+date: 2024-12-30
+
+categories: [trabajo BigData, futbol]  
+
+format:
+  html:
+    theme: journal   
+    highlight-style: a11y   
+    page-layout: full  
+    fontcolor: black
+    backgroundcolor: "#E7DFDF"            
+ 
+title-block-banner: "imagenes/celebracion_campo.jpg"  
+title-block-style: default 
+title-block-banner-color: white
+
+css: assets/my_styles.css           
+---
+
+
+
+
+
+## Introducción al trabajo
+
+Para realizar nuestra empresa descargaremos de Kagle un par de conjuntos de datos que serán la base del trabajo. 
+El primer conjunto de datos se llama `LaLiga_Matches` y se puede encontar [aquí](https://www.kaggle.com/datasets/kishan305/la-liga-results-19952020).
+Este conjunto contiene todas las fechas, equipos, temporadas, goles y resultados desde la temporada 1995-1996. 
+
+
+El segundo conjunto de datos se llama `Big 5 European Leagues Player Stats 2022-23` y se puede encontrar [aquí](https://www.kaggle.com/datasets/ameyaranade/big-5-european-leagues-player-stats-2022-23/data).
+De aquí solos nos descargaremos un archivo csv llamado stats que es una especie de resumen combinado del resto de archivos.
+
+Aparte de eso, utilizaremos una serie de paquetes básicos para trabajar los datos con ellos:
+
+Cargaremos todo así dentro del programa de esta forma: 
+
+
+
+```{r}
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(gganimate)
+
+
+partidos <- read.csv("./assets/LaLiga_Matches.csv")
+jugadores <- read.csv("./assets/Big5-statsStats22-23.csv")
+#en esta ultima IMPORTANTE: al importar selecionar Heading: Yes
+
+
+```
+
+
+Ahora realizaremos una serie de pasos para modificar el bruto de los datos y poder hacerlos  más manejables para trabajar:
+
+
+
+```{r}
+
+#tenemos que arreglar los datos ya que vienen en bruto 
+#(incluyen todos los partidos y todos los jugadores)
+
+#primero filtramos el bruto por la temporada 22-23 y 
+#los resultados de los partidos del FC Barcelona
+
+barcelona_total <- partidos %>% 
+  filter(Season=="2022-23")%>%
+  filter(HomeTeam=="Barcelona" | AwayTeam=="Barcelona")
+
+#Una vez hecho modificamos el nombre de las columnas 
+#y las pasamos al castellano
+
+colnames(barcelona_total)[1] <-"temporada"
+colnames(barcelona_total)[2] <-"fecha"
+colnames(barcelona_total)[3] <-"equipo_local"
+colnames(barcelona_total)[4] <-"equipo_visitante"
+colnames(barcelona_total)[5] <-"goles_local_final"
+colnames(barcelona_total)[6] <-"goles_visitante_final"
+colnames(barcelona_total)[7] <-"resultado_final"
+colnames(barcelona_total)[8] <-"goles_local_descanso"
+colnames(barcelona_total)[9] <-"goles_visitante_descanso"
+colnames(barcelona_total)[10] <-"resultado_descanso"
+
+
+#a partir de aqui empezamos a modificar el df sobre el que trabajaremos:
+#barcelona_total para quedarnos con los partidos 
+#que juega de local o visitante 
+#o para sacar las medias de los goles que marca cuando es local o visitante
+
+barcelona_local <- barcelona_total %>%
+  filter (equipo_local=="Barcelona")
+
+barcelona_visit <- barcelona_total %>%
+  filter (equipo_visitante=="Barcelona")
+
+media_goles_local <- barcelona_local %>%
+  summarise (media_goles_local = mean(goles_local_final))
+
+media_goles_visit <- barcelona_visit %>%
+  summarise (media_goles_visit = mean (goles_visitante_final))
+
+
+#ahora modificaremos los datos de los jugadores 
+
+jugadores_barcelona <- jugadores %>%
+  filter (Squad == "Barcelona")  %>% #QUEREMOS SOLO LOS JUGADORES DEL BARÇA
+  
+  #Y SOLO ESTAS COLUMNAS
+  select(Player, Pos, Born, Age, Starts, Min, Gls, Ast) %>% 
+  
+  #CAMBIO POSICIÓN ERIC GARCIA
+  mutate (Pos =ifelse (Pos=="DF,MF", "DF", Pos)) %>% 
+  #CAMBIO POSICIÓN GAVI
+  mutate (Pos =ifelse (Pos=="MF,FW", "MF", Pos)) %>% 
+  #CAMBIO POSICIÓN FERRAN Y P.TORRE
+  mutate (Pos =ifelse (Pos=="FW,MF", "FW", Pos)) %>% 
+
+  #PASAMOS LENGUAJE + CÓMODO
+  mutate (Pos =ifelse (Pos=="DF", "Defensa", Pos)) %>% 
+  mutate (Pos =ifelse (Pos=="GK", "Portero", Pos)) %>%
+  mutate (Pos =ifelse (Pos=="MF", "Centrocampista", Pos)) %>%
+  mutate (Pos =ifelse (Pos=="FW", "Delantero", Pos))
+
+
+#modificamos los nombres de las columnas
+colnames(jugadores_barcelona)[1] <-"jugador"
+colnames(jugadores_barcelona)[2] <-"posicion"
+colnames(jugadores_barcelona)[3] <-"año"
+colnames(jugadores_barcelona)[4] <- "edad"
+colnames(jugadores_barcelona)[5] <-"titularidades"
+colnames(jugadores_barcelona)[6] <-"minutos_jugados"
+colnames(jugadores_barcelona)[7] <-"goles"
+colnames(jugadores_barcelona)[8] <-"asistencias"
+
+
+
+```
+
+
+
+El primer dataset contiene observaciones sobre un conjunto de `r nrow(barcelona_total)` jornadas de la temporada 22-23 de La Liga. Hay  `r ncol(barcelona_total)` variables (temporada, fecha, equipo local, 
+equipo visitante, resultado final, resultado al descanso,
+goles del equipo local al final y al descanso, goles del equipo visitante
+al final y al descanso).
+
+El segundo dataset contiene observaciones sobre un conjunto de `r nrow(jugadores_barcelona)` jugadores de la plantilla que forma el equipo en la temporada 22-23 de La Liga. Tendremos `r ncol(jugadores_barcelona)` variables 
+(nombre, posición, edad, año de nacimiento, titularidades, minutos jugados, 
+goles, asistencias)
+---
+
+
+## Ambientación
+
+Para ilustrar y poner en contexto como se encontraba el equipo, colocaremos 
+una foto de la plantilla con la que se contaba para afrontar la temporada:
+
+
+![Plantilla, Entrenadores y Presidente del FC Barcelona para la temporada 2022-2023.](./imagenes/plantilla_barcelona.png){#fig-01 width="80%"}
+---
+
+Cabe mencionar que sería la última temporada en la que el equipo disputaría 
+sus partidos como local en su campo debido a la remodelación del estadio 
+prevista al finalizar la temporada.
+
+Para muestra un par de imágenes: 
+
+
+![Camp Nou antes](./imagenes/camp_nou_antes.jpg){fig-align="center" #fig-01 width="50%"}
+
+---
+
+Y el Camp Nou futuro:
+
+![Camp Nou futuro](./imagenes/camp_nou_futuro.jpg){fig-align="center" #fig-01 width="70%"}
+
+
+---
+
+## Análisis de los partidos
+
+Para realizar el análisis de los partidos realizaremos unos cuantos gráficos:
+
+:::
+
+
+---
+
+### Local: Gráfico para el resultado al descanso
+
+
+```{r}
+
+#gráfico 1
+# COMO LOCAL Gráfico de barras para el resultado al descanso 
+#A es Equipo Visitante, D es Empate y H es Equipo Local
+goles_local_descanso <-
+  ggplot(barcelona_local, aes(x = resultado_descanso, fill = resultado_descanso)) +
+  geom_bar() +
+  scale_fill_manual(values = c("H" = "blue", "D" = "yellow", "A" = "red")) +
+  labs(
+    title = "Resultados al descanso como Local",
+    x = "Resultado",
+    y = "Frecuencia",
+    fill = "Resultado"
+  ) +
+  theme_minimal()
+
+
+goles_local_descanso
+
+
+```
+
+<br>
+
+Aquí podemos observar como más del doble de veces el Barcelona se fue ganando 
+al descanso mientras jugaba como local de las que se fue empatando el partido.
+Sólo un mínimo de veces se fue perdiendo al descanso.
+
+
+
+---
+
+### Local: Gráfico para el resultado al final del partido
+
+```{r}
+#gráfico 2
+#COMO LOCAL Gráfico de barras para el resultado al final del partido
+#A es Equipo Visitante, D es Empate y H es Equipo Local
+
+goles_local_final<-
+  ggplot(barcelona_local, aes(x = resultado_final, fill = resultado_final)) +
+  geom_bar() +
+  scale_fill_manual(values = c("H" = "blue", "D" = "yellow", "A" = "red")) +
+  labs(
+    title = "Resultados al final como Local",
+    x = "Resultado",
+    y = "Frecuencia",
+    fill = "Resultado"
+  ) +
+  theme_minimal()
+
+goles_local_final
+```
+
+<br>
+
+La muestra de la casi imbatibilidad del equipo a domicilio. 
+¡¡Apenas perdió 1 partido en casa!!
+
+---
+
+### Visitante: Gráfico para el resultado al descanso
+
+```{r}
+#gráfico 3
+#COMO VISITANTE Gráfico de barras para el resultado al descanso
+#A es Equipo Visitante, D es Empate y H es Equipo Local
+
+goles_visit_descanso<-
+  ggplot(barcelona_visit, aes(x = resultado_descanso, fill = resultado_descanso)) +
+  geom_bar() +
+  scale_fill_manual(values = c("H" = "blue", "D" = "yellow", "A" = "red")) +
+  labs(
+    title = "Resultados al descanso del como Visitante",
+    x = "Resultado",
+    y = "Frecuencia",
+    fill = "Resultado"
+  ) +
+  theme_minimal()
+
+goles_visit_descanso
+```
+
+<br>
+
+Aquí vemos como la fortaleza mostrada por el equipo en las primeras partes
+en casa se diluye fuera.
+Existe mucho más equilibrio en el resultado entre el FC Barcelona 
+y sus rivales al descanso. 
+---
+
+### Visitante: Gráfico para el resultado al final
+
+```{r}
+#gráfico 5
+#COMO VISITANTE Gráfico de barras para el resultado al final
+#A es Equipo Visitante, D es Empate y H es Equipo Local
+
+goles_visit_final<- 
+  ggplot(barcelona_visit, aes(x = resultado_final, fill = resultado_final)) +
+  geom_bar() +
+  scale_fill_manual(values = c("H" = "blue", "D" = "yellow", "A" = "red")) +
+  labs(
+    title = "Resultados al final como Visitante",
+    x = "Resultado",
+    y = "Frecuencia",
+    fill = "Resultado"
+  ) +
+  theme_minimal()
+
+
+goles_visit_final
+```
+
+<br>
+
+Sin embargo, en las segundas partes, el equipo se acababa imponiendo de una
+manera bastante clara a lo largo del campeonato. Las veces que acabó ganando
+fuera superan a las que terminó empatando o perdiendo.
+
+---
+
+### Local: Comparación de resultados al descanso y al final
+
+```{r}
+#gráfico 5
+#Comparación de resultados al descanso y al final cuando el equipo era LOCAL
+#A es Equipo Visitante, D es Empate y H es Equipo Local
+
+df_largo_local <- barcelona_local %>% 
+  pivot_longer (cols = c(resultado_descanso, resultado_final), names_to = "momento", values_to = "resultado") 
+
+#Calculamos proporciones 
+proporciones_local <- df_largo_local %>% 
+  count(momento, resultado) %>% 
+  group_by(momento) %>% 
+  mutate(Prop = n / sum(n)) 
+
+#Combinamos el grafico 
+comp_local <-
+  ggplot(proporciones_local, aes(x = resultado, y = Prop, fill = momento)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  scale_fill_manual(values = c("resultado_descanso" = "yellow", "resultado_final" = "red")) + 
+  labs( title = "Comparación de resultados al descanso y al final como Local", x = "Resultado", y = "Proporción", fill = "Momento" ) + 
+  theme_minimal()
+
+comp_local
+```
+
+<br>
+
+Este gráfico permite un análisis más detallado:
+
+Los partidos donde jugó como local que acabó perdiendo, los iba 
+perdiendo al descanso en la misma proporción.
+
+Por otro lado, proporcionalmente iba empatando más partidos de los que 
+finalmente terminaron así. 
+
+Y para terminar, acabó ganando más partidos al final de los que iba 
+ganando al descanso.
+
+---
+
+### Visitante: Comparación de resultados al descanso y al final
+
+```{r}
+#Comparación de resultados al descanso y al final cuando el equipo era VISITANTE
+#A es Equipo Visitante, D es Empate y H es Equipo Local
+
+df_largo_visit <- barcelona_visit %>% 
+  pivot_longer (cols = c(resultado_descanso, resultado_final), names_to = "momento", values_to = "resultado") 
+
+#Calculamos proporciones 
+proporciones_visit <- df_largo_visit %>% 
+  count(momento, resultado) %>% 
+  group_by(momento) %>% 
+  mutate(Prop = n / sum(n)) 
+
+#Combinamos el grafico 
+comp_visit<- 
+  ggplot(proporciones_visit, aes(x = resultado, y = Prop, fill = momento)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  scale_fill_manual(values = c("resultado_descanso" = "yellow", "resultado_final" = "red")) + 
+  labs( title = "Comparación de resultados al descanso y al final como Visitante", x = "Resultado", y = "Proporción", fill = "Momento" ) + 
+  theme_minimal()
+
+comp_visit
+```
+
+<br>
+
+Siguiendo el modelo del gráfico anterior, los datos reflejan:
+
+El equipo ganó como visitante más partidos en proporción a los que iba
+ganando al descanso.
+
+El equipo empató menos partidos de los que iba empatando al descanso, pero
+en mucha menor proporción. Esto refleja la igualdad de los equipos que le 
+competían en las primeras partes y que luego no le pudieron seguir.
+
+Por último, el equipo acabó perdiendo casi los mismos partidos que perdía
+al descanso, es decir, pocas veces acabó ganando o empatando un partido 
+que ya perdía al descanso.
+
+
+---
+
+## Análisis de los jugadores
+
+Para realizar el análisis de los jugadores también nos apoyaremos en 
+unos cuantos gráficos:
+
+:::
+
+
+---
+
+### Goles y asistencias por posición
+
+
+```{r}
+
+#ahora cambiaremos al dataframe de los jugadores (jugadores_barcelona)
+
+#GRAFICOS JUGADORES
+
+#gráfico 7 
+#GOLES Y ASISTENCIAS POR POSICION
+
+ggplot(jugadores_barcelona, aes(x = posicion)) +
+  geom_bar(aes(y = goles, fill = "Goles"), stat= "identity", position = "dodge") +
+  geom_bar(aes(y = asistencias, fill = "Asistencias"), stat= "identity", position = "dodge") +
+  scale_fill_manual(values = c("Goles" = "blue", "Asistencias" = "green")) +
+  labs(
+    title = "Goles y Asistencias por Posición",
+    x = "Posición en el Campo",
+    y = "Cantidad",
+    fill = "Rendimiento"
+  ) +
+  theme_minimal()
+```
+
+<br>
+
+Podemos observar que ningún portero metió gol (algo bastante obvio) pero
+tampoco dió ninguna asistencia de gol, lo que es menos probable teniendo
+en cuenta el gusto del club por los porteros que se manejen bien con los 
+pies.
+
+Por otra parte los defensas dieron algo más de 5 asistencias de gol pero no
+aportaron ningún gol, lo que puede reflejar que a balón parado no fueron 
+suficiente amenaza.
+
+Los centrocampistas aportaron números algo bajos al ataque, aunque su peso 
+en el juego es difícil de medir con estadísticas. 
+
+Los delanteros del equipo fueron los que llevaron el peso de los números
+ofensivos de manera bastante clara.
+
+---
+
+### Edad y rendimiento
+
+
+```{r}
+
+#gráfico 8
+#EDAD VS RENDIMIENTO
+
+jugadores_edad_rend <- jugadores_barcelona %>%
+  mutate(edad = 2023 - año)
+
+ggplot(jugadores_edad_rend, aes(x = edad, y = goles + asistencias)) +
+  geom_point(aes(color = posicion), size = 4, alpha = 0.7) +
+  scale_color_brewer(palette = "Set2") +
+  labs(
+    title = "Edad vs Rendimiento",
+    x = "Edad del Jugador",
+    y = "Goles + Asistencias",
+    color = "Posición"
+  ) +
+  theme_minimal()
+
+```
+
+<br>
+
+En este gráfico vemos como un par de delanteros en torno a la mediana de edad
+del equipo destacan pero el peso del ataque del equipo lo lleva a la espalda 
+el delantero polaco fichado esa misma temporada, Robert Lewandowski, con 
+34 años y más de 30 aportaciones ofensivas (goles más asistencias).
+
+
+---
+
+### Participaciones de titulares por posición
+
+
+```{r}
+#gráfico 9
+#PARTICIPACIONES DE TITULARES POR POSICION
+
+#Calculamos los porcentajes de titularidades por posición
+
+titulares_pos <- jugadores_barcelona %>% 
+  group_by(posicion) %>% 
+  summarise(titularidades = sum(titularidades)) %>%
+  mutate(porcentaje = 100 * titularidades / sum(titularidades))
+
+#Gráfico "quesito" con porcentajes
+ggplot(titulares_pos, aes(x = "", y = titularidades, fill = posicion)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(porcentaje, 1), "%")), 
+            position = position_stack(vjust = 0.5)) +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(
+    title = "Distribución de Titularidades por Posición",
+    x = "",
+    y = ""
+  ) +
+  theme_void()
+
+```
+
+<br>
+
+En este gráfico observamos como donde menor rotación existe es en la portería,
+mientras que tanto en ataque como en el centro del campo, los titulares suelen
+repetir, donde mayores cambios se producen es entre los jugadores de la defensa.
+Esto muy probablemente se deba a la [plaga de lesiones](https://www.mundodeportivo.com/futbol/fc-barcelona/20220924/1001873089/comunicado-barca-sobre-kounde-araujo.html) entre los centrales
+que le costó al equipo la eliminación de la Champions.
+
+
+---
+
+### Rendimiento de jugadores por posición
+
+
+```{r}
+#gráfico 10
+#RENDIMIENTO DE JUGADORES POR POSICION
+
+
+grafico_mov <- jugadores_barcelona %>%
+  group_by(año, posicion) %>%
+  summarise(goles = sum(goles), asistencias = sum(asistencias))
+
+
+
+
+graf <- ggplot(grafico_mov, aes(x = posicion, y = año, fill = goles + asistencias)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  labs(
+    title = "Rendimiento por posición según el año de nacimiento",
+    x = "Posición",
+    y = "Año",
+    fill = "Goles + Asistencias"
+  ) +
+  theme_minimal() +
+  
+  transition_time(año)
+
+animate(graf, duration=10, fps= 10) 
+```
+
+<br>
+
+En este gráfico observamos como el rendimiento en números lo domina Robert Lewandowski,uno de los jugadores más veteranos (aparece en el primer 
+segundo del gráfico). 
+También observamos como algunos jugadores entorno a la mediana de edad se 
+reparten el peso (exactamente lo mismo que nos salía en un gráfico anterior).
+
+
+
+----------------------
+
+<br>
+
+
+## Conclusiones
+
+Como dejamos claro al principio, el equipo mantuvo un nivel de victorias 
+exepcional, marcando un ritmo imposible de alcanzar para el resto de rivales,
+los de detrás en la tabla de clasificación y a los que se enfrentaba jornada
+a jornada. 
+El jugador destacado de este campeonato sin duda es Lewandowski, 
+el máximo productor ofensivo del equipo y el fichaje estrella de esa temporada.
+
+----------------------
+
+<br>
+
+## Información sobre la sesión
+
+Aquí abajo os dejo mi entorno de trabajo y paquetes utilizados para que lo
+disfrutéis!
+
+```{r}
+#| echo: false
+sessioninfo::session_info() %>% 
+  details::details(summary = 'current session info') 
+```
+
+
+

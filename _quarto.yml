@@ -1,0 +1,75 @@
+project:
+  title: "trabajo_BigData"
+  
+favicon: imagenes/uv.jpeg          
+
+embed-resources: true  
+
+anchor-sections: true
+
+other-links:
+  - text: Web del curso
+    href: https://perezp44.github.io/intro-ds-24-25-web/
+  - text: Trabajos de mis compañeros
+    href: https://perezp44.github.io/intro-ds-24-25-web/05-trabajos-estudiantes.html 
+  - text: Repo del trabajo
+    href: https://jukad10.github.io/trabajo_BigData/
+    
+toc: true
+toc-depth: 3
+toc-location: left    
+
+link-external-newwindow: true 
+
+crossref:
+  fig-title: Imagen  
+  tbl-title: Tabla    
+
+fig-cap-location: bottom
+
+fig-format: png
+fig-dpi: 300
+
+lang: es  
+language: assets/_my_language-es.yml
+
+code-copy: true
+code-overflow: wrap   
+code-fold: show
+code-line-numbers: true
+
+code-tools: true
+code-link: true
+
+execute:
+  echo: true
+  eval: true
+  message: false
+  warning: false
+
+knitr:
+  opts_chunk: 
+    collapse: true
+    comment: "#>" 
+    fig.asp:  7/9
+    out.width: "95%"
+    fig.align: "center"
+    fig.show: "hold"
+    R.options:
+      options(scipen = 999)   
+
+editor_options: 
+  chunk_output_type: console
+
+license: CC BY
+
+
+
+#- para compartir en redes sociales
+#- has de sustituir "perezp44" por tu usuario de Github
+# filters:
+#   - social-share
+#   
+share:
+   permalink: "https://jukad10.github.io/trabajo_BigData/"
+   description: "Mi trabajo para BigData"
